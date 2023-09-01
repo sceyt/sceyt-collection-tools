@@ -30,3 +30,8 @@ func (cq *ChannelQueue[T]) Dequeue() (T, error) {
 		return zero, ErrQueueEmpty
 	}
 }
+
+func (cq *ChannelQueue[T]) Clear() {
+	close(cq.ch)
+	cq.ch = make(chan T, cap(cq.ch))
+}

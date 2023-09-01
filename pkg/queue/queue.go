@@ -13,6 +13,7 @@ type Queue[T any] interface {
 	Len() int
 	Enqueue(v T) error
 	Dequeue() (T, error)
+	Clear()
 }
 
 func New[T any](cap int) Queue[T] {
