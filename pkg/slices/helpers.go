@@ -50,3 +50,21 @@ func RetainByCondition[T any](s []*T, condition func(*T) bool) []*T {
 	}
 	return s[:i]
 }
+
+func RemoveElements[T comparable](removeFrom, remove []T) []T {
+	// Create a map to track elements to be removed
+	removeMap := make(map[T]struct{}, len(remove))
+	for _, item := range remove {
+		removeMap[item] = struct{}{}
+	}
+
+	// Filter removeFrom slice
+	result := make([]T, 0, len(removeFrom))
+	for _, item := range removeFrom {
+		if _, found := removeMap[item]; !found {
+			result = append(result, item)
+		}
+	}
+
+	return result
+}
