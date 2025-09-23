@@ -14,47 +14,55 @@ type Event struct {
 	Data interface{}
 }
 
-// Handler is a function that processes an event and updates the cache
-type Handler func(c *Cache, e *Event)
-
 // Cache is a thread-safe map with event-driven update capability
-type Cache struct {
+type Cache interface {
+	RegisterHandler(eventType EventType, handler Handler)
+	HandleEvent(e *Event)
+	Get(key string) (interface{}, bool)
+	Set(key string, value interface{}, ttl time.Duration)
+	Delete(key string)
+}
+
+// Handler is a function that processes an event and updates the cache
+type Handler func(c Cache, e *Event)
+
+type cache struct {
 	data     *gocache.Cache
 	handlers map[EventType]Handler
 }
 
 // NewCache creates a new cache
-func NewCache() *Cache {
-	return &Cache{
+func NewCache() Cache {
+	return &cache{
 		data:     gocache.New(gocache.NoExpiration, 10*time.Minute),
 		handlers: make(map[EventType]Handler),
 	}
 }
 
 // RegisterHandler binds a handler to an event type
-func (c *Cache) RegisterHandler(eventType EventType, handler Handler) {
+func (c *cache) RegisterHandler(eventType EventType, handler Handler) {
 	c.handlers[eventType] = handler
 }
 
 // HandleEvent processes an incoming event
-func (c *Cache) HandleEvent(e *Event) {
+func (c *cache) HandleEvent(e *Event) {
 	if handler, ok := c.handlers[e.Type]; ok {
 		handler(c, e)
 	}
 }
 
 // Get retrieves a cached value
-func (c *Cache) Get(key string) (interface{}, bool) {
+func (c *cache) Get(key string) (interface{}, bool) {
 	v, ok := c.data.Get(key)
 	return v, ok
 }
 
 // Set stores a value in the cache
-func (c *Cache) Set(key string, value interface{}, ttl time.Duration) {
+func (c *cache) Set(key string, value interface{}, ttl time.Duration) {
 	c.data.Set(key, value, ttl)
 }
 
 // Delete removes a value from the cache
-func (c *Cache) Delete(key string) {
+func (c *cache) Delete(key string) {
 	c.data.Delete(key)
 }
